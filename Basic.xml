@@ -1,0 +1,356 @@
+<form version="1.1" theme="light">
+  <label>Basic</label>
+  <search id="data_inventory_built">
+    <query>| inputlookup data_inventory_products_lookup | search stage="all-done" </query>
+    <done>
+      <condition match="$job.resultCount$&gt;0">
+        <unset token="dataInventoryNotBuilt">1</unset>
+        <set token="dataInventoryBuilt">1</set>
+      </condition>
+      <condition match="$job.resultCount$=0">
+        <set token="dataInventoryNotBuilt">1</set>
+        <unset token="dataInventoryBuilt">1</unset>
+      </condition>
+    </done>
+  </search>
+  <fieldset submitButton="false" autoRun="true"></fieldset>
+  <row>
+    <panel>
+      <title>ES Lookups disabled</title>
+      <chart>
+        <search>
+          <query>| rest /services/data/lookup-table-files splunk_server=local
+| search eai:acl.app=SplunkEnterpriseSecuritySuite
+| stats count by disabled</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Notable Events in the past 30 days</title>
+      <single>
+        <search>
+          <query>index=notable sourcetype=stash
+| stats count</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Incident Review page views in past 30 days</title>
+      <single>
+        <search>
+          <query>index=_internal sourcetype=splunkd_ui_access file=incident_review
+| stats count</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Assets and Identities Data Model event count</title>
+      <table>
+        <search>
+          <query>| `identities`
+| stats count
+| eval "Count Type"="Identities"
+| append
+    [ search `assets` | stats count | eval "Count Type"="Assets"]
+| table "Count Type", count</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Enabled ES Lookup Files</title>
+      <table>
+        <search>
+          <query>| rest /services/data/transforms/lookups splunk_server=local
+| search eai:acl.app=SplunkEnterpriseSecuritySuite
+| eventstats count as total
+| search disabled=0
+| stats count as "enabled" by total
+| eval percentage=(enabled*100)/total</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>MITRE ATT&amp;CK coverage</title>
+      <table>
+        <search>
+          <query>index=notable "annotations.mitre_attack"="*"
+| stats count
+| eval "Count Type"="Mitre"
+| append
+    [ search index=risk "annotations._frameworks"="*" | stats count | eval "Count Type"="Other Frameworks"]
+| table "Count Type", count</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Count of events by datamodel</title>
+      <input type="dropdown" token="modelname" searchWhenChanged="true">
+        <label>Data model name</label>
+        <fieldForLabel>modelName</fieldForLabel>
+        <fieldForValue>modelName</fieldForValue>
+        <search>
+          <query>| datamodel
+| rex field=_raw "\"modelName\"\s*\:\s*\"(?&lt;modelName&gt;[^\"]+)\""
+| fields modelName</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+      </input>
+      <input type="time" token="field1">
+        <label></label>
+        <default>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <single>
+        <title>Event Count</title>
+        <search>
+          <query>| tstats summariesonly=t min(_time) as min, max(_time) as max count from datamodel=$modelname$
+| eval "Event count" = count
+| fields "Event count"</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Out-of-the-box RBA rules enabled</title>
+      <table>
+        <search>
+          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches
+| search action.correlationsearch.label IN ("ATT&amp;CK*" "Risk Threshold*")
+| eval disabled=case(disabled=0,"Yes",disabled=1,"No")
+| eval is_scheduled=case(is_scheduled=0,"No",is_scheduled=1,"Yes")
+| table action.correlationsearch.label disabled is_scheduled next_scheduled_time
+| rename action.correlationsearch.label AS "Incident Rule" disabled AS "Enabled" is_scheduled AS "Scheduled" next_scheduled_time AS "Next Scheduled Time"</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Dashboard page views by app</title>
+      <input type="dropdown" token="appnam" searchWhenChanged="true">
+        <label>App Name</label>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+        <fieldForLabel>eai:acl.app</fieldForLabel>
+        <fieldForValue>eai:acl.app</fieldForValue>
+        <search>
+          <query>| rest /servicesNS/-/-/data/ui/views splunk_server=*
+| search isDashboard=1 isVisible=1
+| fields eai:acl.app
+| dedup eai:acl.app</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+      </input>
+      <input type="time" token="field2">
+        <label></label>
+        <default>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <table>
+        <search>
+          <query>index=_internal sourcetype=splunk_web_access host=* user=*
+| rex field=uri_path ".*/(?&lt;title&gt;[^/]*)$$"
+| join title
+[| rest /servicesNS/-/-/data/ui/views splunk_server=local
+| search isDashboard=1 isVisible=1 eai:acl.app=$appnam$
+| rename eai:acl.app as app
+| fields title app ]
+| rename title as dashboard
+| stats count by dashboard app</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">5</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Apps version</title>
+      <input type="dropdown" token="app3" searchWhenChanged="true">
+        <label>App Name</label>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+        <fieldForLabel>label</fieldForLabel>
+        <fieldForValue>label</fieldForValue>
+        <search>
+          <query>| rest /services/apps/local
+| search disabled=0
+| dedup label
+| sort label</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+      </input>
+      <table>
+        <search>
+          <query>| rest /services/apps/local splunk_server=local
+| search disabled=0 label="$app3$"
+| table label version
+| dedup label
+| sort  label</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">5</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Dashboards last updated</title>
+      <table>
+        <search>
+          <query>| rest /servicesNS/-/-/data/ui/views splunk_server=local
+| search isDashboard=1 isVisible=1 updated&gt;2006
+| table title updated</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">5</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title># of Risk Notables in the past 7 days</title>
+      <single>
+        <search>
+          <query>index=notable sourcetype=stash eventtype=risk_notables
+| stats count</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+</form>
