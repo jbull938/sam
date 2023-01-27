@@ -53,35 +53,4 @@
       </table>
     </panel>
   </row>
-  <row>
-    <panel>
-      <title>Data model sources and # of events</title>
-      <table>
-        <search>
-          <query>| datamodel
-| spath "objects{}.tsidxNamespace"
-| rename "objects{}.tsidxNamespace" as objectName
-| stats count by objectName
-| rex field="objectName" "datamodel=\"(?&lt;model&gt;[^.]+).(?&lt;dataset&gt;[^\"]+)"
-| where objectName!=""
-| map search="|tstats summariesonly=t count dc(host) as dc_host values($$dataset$$.tag) as tags
-             from datamodel=$$model$$.$$dataset$$ by index sourcetype | eval model=\"$$model$$.$$dataset$$\"" maxsearches=99
-| eval tags=mvjoin(tags,"|")
-| eval datamodel=mvindex(split(model,"."),0)
-| table datamodel, index, sourcetype, count
-| rename count as dm_events</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">20</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-  </row>
 </dashboard>
