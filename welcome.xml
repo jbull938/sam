@@ -1,7 +1,0 @@
-
-        <dashboard version="2" theme="light" hiddenElements="{&quot;hideEdit&quot;:false,&quot;hideOpenInSearch&quot;:false,&quot;hideExport&quot;:false}">
-            <label>Welcome</label>
-            <description></description>
-            <definition><![CDATA[{"visualizations":{"viz_2FSQIjku":{"type":"splunk.markdown","options":{"markdown":"###### Welcome to SAM\n\n### The Splunk Adoption Maturity (SAM) Guided Assessment - Is an organized set of best practice use case assessments that helps customers get the most out of Splunk Security products by continuing to expand value, return on investment and guidance on expanding maturity through the deployment of use cases at various levels of growth on the customer journey."}}},"dataSources":{},"defaults":{"dataSources":{"ds.search":{"options":{"queryParameters":{"latest":"$global_time.latest$","earliest":"$global_time.earliest$"}}}}},"inputs":{"input_global_trp":{"type":"input.timerange","options":{"token":"global_time","defaultValue":"-24h@h,now"},"title":"Global Time Range"}},"layout":{"type":"grid","options":{},"structure":[{"item":"viz_2FSQIjku","type":"block","position":{"x":0,"y":0,"w":1200,"h":400}}],"globalInputs":["input_global_trp"]},"description":"","title":"Welcome"}]]></definition>
-            <assets><![CDATA[{}]]></assets>
-        </dashboard>
