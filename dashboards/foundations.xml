@@ -2,18 +2,220 @@
   <label>Foundations</label>
   <row>
     <panel>
-      <title>ES Analyst logins - past 7 days</title>
+      <title>Admin user logins - past 7 days</title>
+      <html>
+        <style>
+          .dashboard-row .dashboard-panel {
+          border: .5px solid #7B7B7B;
+          }
+          .dashboard-panel h2{
+            font-weight: bold !important;
+            border-top-right-radius: 15px;
+            border-top-left-radius: 15px;
+          }
+        </style>
+      </html>
+      <chart>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.active_users"
+| timechart values(data.admin_count)</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Analyst user logins - past 7 days</title>
+      <chart>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.active_users"
+| timechart values(data.analyst_count)</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top 5 data model usage</title>
+      <chart>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.datamodel_distribution" data.datamodel IN ("*identity*" "Network_Traffic" "Incident_Management" "Authentication" "Threat_Intelligence")
+| stats values(data.perc) by data.datamodel
+| rename data.datamodel as "Data Model", values(data.perc) as "% of usage"</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>SSE Data Inventory page views - past 30 days</title>
+      <single>
+        <search>
+          <query>index=_internal sourcetype=splunkd_ui_access
+| rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)"
+| search dashboard=data_inventory
+| stats count</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title># of correlation searched scheduled</title>
+      <single>
+        <search>
+          <query>| rest /services/saved/searches splunk_server=local
+| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0")
+| stats count</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title># of enabled correlation searches by app</title>
       <table>
         <search>
-          <query>| rest /services/authentication/users splunk_server=local 
-| fields realname title roles 
-| search roles="*analyst*" title=*
-| appendcols 
-    [| search index=_audit sourcetype=audittrail NOT user="n/a" NOT user="splunk-system-user" NOT "scheduler__nobody__search" "info=succeeded"
-    | stats count by user]
-| search title=*
-| table roles count</query>
-          <earliest>-7d@h</earliest>
+          <query>| rest /services/saved/searches splunk_server=local
+| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0")
+| stats count by eai:acl.app</query>
+          <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
@@ -21,28 +223,6 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-    <panel>
-      <title>All apps installed on ES Search Head</title>
-      <table>
-        <search>
-          <query>| rest /services/apps/local splunk_server=local
-| table label version
-| sort label</query>
-          <earliest>-7d@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
@@ -50,99 +230,27 @@
     </panel>
   </row>
   <row>
-    <panel>
-      <title>Top 5 security data models</title>
-      <table>
-        <search>
-          <query>| datamodel 
-| spath "objects{}.tsidxNamespace" 
-| rename "objects{}.tsidxNamespace" as objectName 
-| stats count by objectName 
-| rex field="objectName" "datamodel=\"(?&lt;model&gt;[^.]+).(?&lt;dataset&gt;[^\"]+)" 
-| where objectName!="" 
-| map search="|tstats summariesonly=t count dc(host) as dc_host values($$dataset$$.tag) as tags 
-             from datamodel=$$model$$.$$dataset$$ by index sourcetype | eval model=\"$$model$$.$$dataset$$\"" maxsearches=99 
-| eval tags=mvjoin(tags,"|") 
-| eval datamodel=mvindex(split(model,"."),0) 
-| search datamodel IN ("Authentication" "Identity_Management" "Network_Traffic" "Incident_Management" "Threat_Intelligence")
-| table datamodel, index, sourcetype, count 
-| rename count as dm_events</query>
-          <earliest>-7d@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-    <panel>
-      <title>Correlation searches enabled</title>
-      <table>
-        <search>
-          <query>| rest /services/saved/searches splunk_server=local
-| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0") 
-| table title next_scheduled_time</query>
-          <earliest>-7d@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>Enabled searches by app</title>
-      <table>
-        <search>
-          <query>| rest /services/saved/searches splunk_server=local
-| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0") 
-| table eai:acl.app title next_scheduled_time</query>
-          <earliest>-7d@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">row</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
     <panel>
       <title>Security dashboard page views - past 30 days</title>
       <table>
         <search>
-          <query>index=_internal sourcetype=splunkd_ui_access 
-| rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)" 
-| search dashboard=ess_use_case_library 
-| stats count 
-| eval "Count Type"="ES Use Case Library" 
-| append 
-    [ search index=_internal sourcetype=splunkd_ui_access 
-    | rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)" 
-    | search dashboard=risk_analysis 
-    | stats count 
-    | eval "Count Type"="Risk Analysis"] 
-| append 
-    [ search index=_internal sourcetype=splunkd_ui_access 
-    | rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)" 
-    | search dashboard=vuln_operations 
-    | stats count 
-    | eval "Count Type"="Vulnerability Operations"] 
+          <query>index=_internal sourcetype=splunkd_ui_access
+| rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)"
+| search dashboard=ess_use_case_library
+| stats count
+| eval "Count Type"="ES Use Case Library"
+| append
+    [ search index=_internal sourcetype=splunkd_ui_access
+    | rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)"
+    | search dashboard=risk_analysis
+    | stats count
+    | eval "Count Type"="Risk Analysis"]
+| append
+    [ search index=_internal sourcetype=splunkd_ui_access
+    | rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)"
+    | search dashboard=vuln_operations
+    | stats count
+    | eval "Count Type"="Vulnerability Operations"]
 | table "Count Type", count</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
@@ -191,7 +299,7 @@
       <title>Vulnerability data</title>
       <single>
         <search>
-          <query>| `tstats` dc(Vulnerabilities.dest) from datamodel=Vulnerabilities.Vulnerabilities where * by _time span=1d 
+          <query>| `tstats` dc(Vulnerabilities.dest) from datamodel=Vulnerabilities.Vulnerabilities where * by _time span=1d
 | stats dc(Vulnerabilities.dest)</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
@@ -219,23 +327,35 @@
       <title>Risk index events</title>
       <single>
         <search>
-          <query>| tstats count where index="risk" sourcetype="*"</query>
+          <query>| tstats count where index="risk"</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </single>
     </panel>
   </row>
   <row>
-    <panel>
+
+    <panel id="notablePanel">
+      <html>
+        <style>
+          #notablePanel{
+            width:75% !important;
+          }
+          #threatIntel{
+            width:25% !important;
+          }
+        </style>
+      </html>
       <title>Notables - past 30 days</title>
       <chart>
         <search>
-          <query>index=notable 
-| eval notable_type=if(isnotnull(risk_object) AND isnotnull(risk_object_type), "Risk Notable", "Notable") 
-| fields notable_type, count 
+          <query>index=notable
+| eval notable_type=if(isnotnull(risk_object) AND isnotnull(risk_object_type), "Risk Notable", "Notable")
+| fields notable_type, count
 | timechart span=1d count by notable_type</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
@@ -273,6 +393,18 @@
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
       </chart>
+    </panel>
+    <panel id="threatIntel">
+      <title>Threat Intelligence data model events</title>
+      <single>
+        <search>
+          <query>| tstats count from datamodel=Threat_Intelligence</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
     </panel>
   </row>
 </dashboard>

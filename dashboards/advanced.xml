@@ -2,7 +2,32 @@
   <label>Advanced</label>
   <row>
     <panel>
+      <title>Behavioral analytics detections (if applicable)</title>
+      <single>
+        <search>
+          <query>| rest /services/behavioral_analytics/detections count=0 splunk_server=local
+| stats count</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
       <title>UBA apps installed</title>
+      <html>
+        <style>
+          .dashboard-row .dashboard-panel {
+          border: .5px solid #7B7B7B;
+          }
+          .dashboard-panel h2{
+            font-weight: bold !important;
+            border-top-right-radius: 15px;
+            border-top-left-radius: 15px;
+          }
+        </style>
+      </html>
       <table>
         <search>
           <query>| rest /services/apps/local splunk_server=local
@@ -24,59 +49,39 @@
       </table>
     </panel>
     <panel>
-      <title>Identities by category</title>
-      <chart>
+      <title>Custom Asset Fields Created</title>
+      <single>
         <search>
-          <query>| inputlookup identity_lookup_expanded where * 
-| fillnull value="" priority, bunit, category, watchlist 
-| eval category_=mvjoin(category, " ") 
-| stats values(category) as category, count by priority, bunit, category_, watchlist 
-| search 
-| stats sum(count) as count by category 
-| where category!=""</query>
-          <earliest>-15m</earliest>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.identity_manager"
+| table data.asset_custom_fields</query>
+          <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-        <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.visibility">visible</option>
-        <option name="charting.axisTitleY2.visibility">visible</option>
-        <option name="charting.axisX.abbreviation">none</option>
-        <option name="charting.axisX.scale">linear</option>
-        <option name="charting.axisY.abbreviation">none</option>
-        <option name="charting.axisY.scale">linear</option>
-        <option name="charting.axisY2.abbreviation">none</option>
-        <option name="charting.axisY2.enabled">0</option>
-        <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">pie</option>
-        <option name="charting.chart.bubbleMaximumSize">50</option>
-        <option name="charting.chart.bubbleMinimumSize">10</option>
-        <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
-        <option name="charting.chart.showDataLabels">none</option>
-        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">default</option>
-        <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">none</option>
-        <option name="charting.layout.splitSeries">0</option>
-        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-        <option name="charting.legend.mode">standard</option>
-        <option name="charting.legend.placement">right</option>
-        <option name="charting.lineWidth">2</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
-      </chart>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
     </panel>
     <panel>
       <title>Assets by category</title>
       <chart>
         <search>
-          <query>| inputlookup append=T asset_lookup_by_str where * asset="*" 
-| inputlookup append=t asset_lookup_by_cidr where * asset="*" 
+          <query>| inputlookup append=T asset_lookup_by_str where * asset="*"
+| inputlookup append=t asset_lookup_by_cidr where * asset="*"
 | stats count by category</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
@@ -115,15 +120,13 @@
         <option name="trellis.size">medium</option>
       </chart>
     </panel>
-  </row>
-  <row>
     <panel>
-      <title>Custom Asset &amp; Identities fields created</title>
+      <title>Custom Identity Fields Created</title>
       <single>
         <search>
-          <query>index=_configtracker sourcetype=splunk_configuration_change "data.path"="/opt/splunk/etc/apps/SA-IdentityManagement/local/props.conf" "data.changes{}.properties{}.new_value"="*"
-| stats count</query>
-          <earliest>-30d@d</earliest>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.identity_manager"
+| table data.identity_custom_fields</query>
+          <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
@@ -145,6 +148,56 @@
         <option name="useThousandSeparators">1</option>
       </single>
     </panel>
+    <panel>
+      <title>Identities by category</title>
+      <chart>
+        <search>
+          <query>| inputlookup identity_lookup_expanded where *
+| fillnull value="" priority, bunit, category, watchlist
+| eval category_=mvjoin(category, " ")
+| stats values(category) as category, count by priority, bunit, category_, watchlist
+| search
+| stats sum(count) as count by category
+| where category!=""</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
     <panel>
       <title>Risk Analysis dashboard views - past 30 days</title>
       <single>
@@ -202,78 +255,14 @@
   </row>
   <row>
     <panel>
-      <title>Percent of High or Critical incidents currently unassigned</title>
+      <title>Percent of unassigned High or Critical incidents</title>
       <single>
         <search>
-          <query>index=notable 
-| eval indexer_guid=replace(_bkt,".*~(.+)","\1"),event_hash=md5(_time._raw),event_id=indexer_guid."@@".index."@@".event_hash,rule_id=event_id 
-| search event_id="*" 
-| fields - host_* 
-| tags outputfield=tag 
-| eval "tag"=mvdedup(mvappend('tag',NULL,'orig_tag')) 
-| dedup rule_id 
-| lookup update=true notable_xref_lookup event_id OUTPUTNEW xref_name as notable_xref_name,xref_id as notable_xref_id 
-| eval notable_xref=mvzip(notable_xref_name,notable_xref_id,":") 
-| lookup update=true correlationsearches_lookup _key as source OUTPUTNEW annotations, security_domain, severity, rule_name, description as savedsearch_description, rule_title, rule_description, drilldown_name, drilldown_search, drilldown_earliest_offset, drilldown_latest_offset, default_status, default_owner, default_disposition, next_steps, investigation_profiles, extract_artifacts, recommended_actions 
-| eval rule_name=if(isnull(rule_name),source,rule_name),rule_title=if(isnull(rule_title),rule_name,rule_title),drilldown_earliest=case(isint(drilldown_earliest_offset),_time-drilldown_earliest_offset,drilldown_earliest_offset="$$info_min_time$$",'info_min_time',1=1,null()),drilldown_latest=case(isint(drilldown_latest_offset),_time+drilldown_latest_offset,drilldown_latest_offset="$$info_max_time$$",'info_max_time',1=1,null()),security_domain=if(isnull(security_domain),"threat",lower(security_domain)),rule_description=case(isnotnull(rule_description),rule_description,isnotnull(savedsearch_description),savedsearch_description,1=1,"unknown") 
-| eval governance_lookup_type="default" 
-| lookup update=true governance_lookup savedsearch as source, lookup_type as governance_lookup_type OUTPUT governance, control 
-| eval governance_lookup_type="tag" 
-| lookup update=true governance_lookup savedsearch as source, tag, lookup_type as governance_lookup_type OUTPUT governance as governance_tag, control as control_tag 
-| eval "governance"=mvappend('governance',NULL,'governance_tag'),"control"=mvappend('control',NULL,'control_tag') 
-| fields - governance_lookup_type,governance_tag,control_tag 
-| spathannotations 
-| lookup mitre_attack_lookup mitre_technique_id as annotations.mitre_attack OUTPUTNEW mitre_description as annotations.mitre_attack.mitre_description,mitre_detection as annotations.mitre_attack.mitre_detection,mitre_platform as annotations.mitre_attack.mitre_platform,mitre_software_name as annotations.mitre_attack.mitre_software_name,mitre_software_platform as annotations.mitre_attack.mitre_software_platform,mitre_software_type as annotations.mitre_attack.mitre_software_type,mitre_software_url as annotations.mitre_attack.mitre_software_url,mitre_tactic as annotations.mitre_attack.mitre_tactic,mitre_tactic_id as annotations.mitre_attack.mitre_tactic_id,mitre_technique as annotations.mitre_attack.mitre_technique,mitre_technique_id as annotations.mitre_attack.mitre_technique_id,mitre_threat_group_aliases as annotations.mitre_attack.mitre_threat_group_aliases,mitre_threat_group_id as annotations.mitre_attack.mitre_threat_group_id,mitre_threat_group_name as annotations.mitre_attack.mitre_threat_group_name,mitre_threat_group_url as annotations.mitre_attack.mitre_threat_group_url,mitre_url as annotations.mitre_attack.mitre_url 
-| eval temp_time=time()+86400 
-| lookup update=true event_time_field=temp_time incident_review_lookup rule_id OUTPUT owner as new_owner, urgency as new_urgency, status as new_status, disposition as new_disposition 
-| lookup update=true event_time_field=temp_time incident_review_comment_lookup rule_id OUTPUT time as review_time,user as reviewer,comment 
-| eval owner=if(isnotnull(new_owner),new_owner,owner),status=case(isnotnull(new_status),new_status,isnotnull(status),status,1==1,default_status),urgency=if(isnotnull(new_urgency),new_urgency,urgency),disposition=if(isnotnull(new_disposition), new_disposition, default_disposition) 
-| fields - temp_time,new_owner,new_status,new_urgency,new_disposition 
-| eval temp_status=if(isnull(status),-1,status) 
-| lookup update=true reviewstatuses_lookup _key as temp_status OUTPUT status,label as status_label,description as status_description,default as status_default,end as status_end 
-| eval status=if(isnull(status_label),0,status),status_label=if(isnull(status_label),"Unassigned",status_label),status_description=if(isnull(status_description),"unknown",status_description),"status_default"=case(match('status_default', "1|[Tt]|[Tt][Rr][Uu][Ee]"),"true",match('status_default', "0|[Ff]|[Ff][Aa][Ll][Ss][Ee]"),"false",1=1,'status_default'),"status_end"=case(match('status_end', "1|[Tt]|[Tt][Rr][Uu][Ee]"),"true",match('status_end', "0|[Ff]|[Ff][Aa][Ll][Ss][Ee]"),"false",1=1,'status_end'),status_group=case(status_default=="true","New",status_end=="true","Closed",status=0,"New",1=1,"Open") 
-| fields - temp_status 
-| eval temp_disposition=if(isnull(disposition),-3,disposition) 
-| lookup update=true disposition_lookup _key as temp_disposition OUTPUT status as disposition,label as disposition_label,description as disposition_description,default as disposition_default 
-| eval disposition=if(isnull(disposition),"disposition:0",disposition),disposition_label=if(isnull(disposition_label),"Unassigned",disposition_label),disposition_description=if(isnull(disposition_description),"An error is preventing the event from having a valid disposition.",disposition_description),"disposition_default"=case(match('disposition_default', "1|[Tt]|[Tt][Rr][Uu][Ee]"),"true",match('disposition_default', "0|[Ff]|[Ff][Aa][Ll][Ss][Ee]"),"false",1=1,'disposition_default') 
-| fields - temp_disposition 
-| eval owner=case(isnotnull(owner),owner,isnotnull(default_owner),default_owner,1=1,"unassigned") 
-| lookup update=true user_realnames_lookup user as "owner" OUTPUTNEW realname as "owner_realname" 
-| eval "owner_realname"=if(isnull('owner_realname'),'owner','owner_realname') 
-| lookup update=true user_realnames_lookup user as "creator" OUTPUTNEW realname as "creator_realname" 
-| eval "creator_realname"=if(isnull('creator_realname'),'creator','creator_realname') 
-| eval severities=if(in(lower(severity), "critical", "high", "medium", "low", "informational"),lower(severity),"unknown"),severity=case(severities="critical", "critical", severities="high", "high", severities="medium", "medium", severities="low", "low", severities="informational", "informational", 1==1, "unknown"),priorities=lower(mvappend(priority, host_priority, orig_host_priority, src_priority, dest_priority, dvc_priority, src_user_priority, user_priority, host_owner_priority, orig_host_owner_priority, src_owner_priority, dest_owner_priority, dvc_owner_priority)),priority=case(priorities="critical", "critical", priorities="high", "high", priorities="medium", "medium", priorities="low", "low", priorities="informational", "informational", 1==1, "unknown") 
-| lookup local=true urgency_lookup priority,severity OUTPUTNEW urgency 
-| eval urgency=if(in(lower(urgency), "critical", "high", "medium", "low", "informational"), lower(urgency), "unknown") 
-| typer 
-| tags outputfield=tag 
-| eval "tag"=mvdedup(mvappend('tag',NULL,'orig_tag')) 
-| rex field=eventtype "notable_suppression-(?&lt;suppression&gt;.+)" 
-| lookup update=true risk_correlation_by_system_lookup risk_object as "orig_host" OUTPUT risk_score as "_orig_host_risk_score" 
-| eval "orig_host_risk_score"=if(isnotnull(orig_host_risk_score),orig_host_risk_score,_orig_host_risk_score) 
-| fields - _orig_host_risk_score 
-| lookup update=true risk_correlation_by_system_lookup risk_object as "dvc" OUTPUT risk_score as "_dvc_risk_score" 
-| eval "dvc_risk_score"=if(isnotnull(dvc_risk_score),dvc_risk_score,_dvc_risk_score) 
-| fields - _dvc_risk_score 
-| lookup update=true risk_correlation_by_system_lookup risk_object as "src" OUTPUT risk_score as "_src_risk_score" 
-| eval "src_risk_score"=if(isnotnull(src_risk_score),src_risk_score,_src_risk_score) 
-| fields - _src_risk_score 
-| lookup update=true risk_correlation_by_system_lookup risk_object as "dest" OUTPUT risk_score as "_dest_risk_score" 
-| eval "dest_risk_score"=if(isnotnull(dest_risk_score),dest_risk_score,_dest_risk_score) 
-| fields - _dest_risk_score 
-| lookup update=true risk_correlation_by_user_lookup risk_object as "src_user" OUTPUT risk_score as "_src_user_risk_score" 
-| eval "src_user_risk_score"=if(isnotnull(src_user_risk_score),src_user_risk_score,_src_user_risk_score) 
-| fields - _src_user_risk_score 
-| lookup update=true risk_correlation_by_user_lookup risk_object as "user" OUTPUT risk_score as "_user_risk_score" 
-| eval "user_risk_score"=if(isnotnull(user_risk_score),user_risk_score,_user_risk_score) 
-| fields - _user_risk_score 
-| eval "host_risk_object_type"=if(isnotnull('host_risk_score'),"system",null()),"orig_host_risk_object_type"=if(isnotnull('orig_host_risk_score'),"system",null()),"dvc_risk_object_type"=if(isnotnull('dvc_risk_score'),"system",null()),"src_risk_object_type"=if(isnotnull('src_risk_score'),"system",null()),"dest_risk_object_type"=if(isnotnull('dest_risk_score'),"system",null()),"src_user_risk_object_type"=if(isnotnull('src_user_risk_score'),"user",null()),"user_risk_object_type"=if(isnotnull('user_risk_score'),"user",null()),risk_score=if(isnotnull(risk_score),risk_score,max(orig_host_risk_score,dvc_risk_score,src_risk_score,dest_risk_score,src_user_risk_score,user_risk_score)) 
-| eval notable_type=if(isnotnull(risk_object) AND isnotnull(risk_object_type), "risk_event", "notable") 
-| eval orig_source=if(isnotnull(source_correlation_search), source_correlation_search, orig_source) 
-| search urgency IN (high critical) 
-| eventstats count as total 
-| search owner=unassigned 
-| stats count as "unassigned" by total 
+          <query>| inputlookup incident_review_lookup
+| search urgency IN (high critical)
+| eventstats count as total
+| where isnull(owner)
+| stats count as "unassigned" by total
 | eval percentage=(unassigned*100)/total
 | table percentage</query>
           <earliest>-7d@h</earliest>
@@ -300,11 +289,24 @@
       </single>
     </panel>
     <panel>
-      <title>Adaptive Response Actions triggered - past 7 days</title>
+      <title>Mean Time to Triage Critical Incidents</title>
       <table>
         <search>
-          <query>| tstats `summariesonly` latest(Modular_Actions.action_status) as action_status,values(Modular_Actions.search_name) as search_name from datamodel=Splunk_Audit.Modular_Actions where * by Modular_Actions.action_name 
-| stats count by Modular_Actions.action_name</query>
+          <query>| tstats `summariesonly` earliest(_time) as _time from datamodel=Incident_Management.Notable_Events_Meta by source,Notable_Events_Meta.rule_id
+| `drop_dm_object_name("Notable_Events_Meta")`
+| `get_correlations`
+| join rule_id
+    [| from inputlookup:incident_review_lookup
+    | search urgency=critical
+    | eval _time=time
+    | stats earliest(_time) as review_time by rule_id]
+| eval ttt=review_time-_time
+| stats count,avg(ttt) as avg_ttt,max(ttt) as max_ttt by rule_name
+| sort - avg_ttt
+| `uptime2string(avg_ttt, avg_ttt)`
+| `uptime2string(max_ttt, max_ttt)`
+| rename *_ttt* as *(time_to_triage)*
+| fields - *_dec</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -313,29 +315,6 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-    <panel>
-      <title>Adaptive Response Actions scheduled</title>
-      <table>
-        <search>
-          <query>| rest /services/saved/searches splunk_server=local
-| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0") 
-| table actions
-| dedup actions</query>
-          <earliest>-7d@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
@@ -344,48 +323,85 @@
   </row>
   <row>
     <panel>
-      <title>Adaptive Response Actions triggered - past 30 days</title>
-      <chart>
+      <title>Adaptive Response Actions triggered - past 7 days</title>
+      <table>
         <search>
-          <query>| tstats `summariesonly` min(_time) as _time,latest(Modular_Actions.action_status) as action_status from datamodel=Splunk_Audit.Modular_Actions where * by Modular_Actions.action_name, Modular_Actions.sid, Modular_Actions.rid 
-| search 
-| timechart count by Modular_Actions.action_name</query>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.search_actions" "data.is_adaptive_response"=1
+| stats values(data.count) by data.action</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Adaptive response actions scheduled</title>
+      <single>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.search_actions" "data.is_adaptive_response"=1
+| stats values(data.total_scheduled)</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Total Adaptive Response Actions triggered - last 30 days</title>
+      <single>
+        <search>
+          <query>| tstats `summariesonly` latest(Modular_Actions.action_status) as action_status,values(Modular_Actions.search_name) as search_name,latest(Modular_Actions.duration) as duration from datamodel=Splunk_Audit.Modular_Actions where * by Modular_Actions.action_mode,Modular_Actions.action_name,Modular_Actions.sid,Modular_Actions.rid,Modular_Actions.user
+| search
+| stats values(Modular_Actions.action_mode) as action_mode,values(search_name) as search_name,values(Modular_Actions.user) as user,dc(Modular_Actions.sid) as search_count,avg(duration) as "avg_duration (ms)",count as result_count by Modular_Actions.action_name
+| eval "avg_duration (ms)"=round('avg_duration (ms)', 1)
+| rename Modular_Actions.action_name as action_name
+| sort 10 - result_count
+| `es_get_cam`
+| stats sum(search_count)</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-        <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.visibility">visible</option>
-        <option name="charting.axisTitleY2.visibility">visible</option>
-        <option name="charting.axisX.abbreviation">none</option>
-        <option name="charting.axisX.scale">linear</option>
-        <option name="charting.axisY.abbreviation">none</option>
-        <option name="charting.axisY.scale">linear</option>
-        <option name="charting.axisY2.abbreviation">none</option>
-        <option name="charting.axisY2.enabled">0</option>
-        <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">column</option>
-        <option name="charting.chart.bubbleMaximumSize">50</option>
-        <option name="charting.chart.bubbleMinimumSize">10</option>
-        <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
-        <option name="charting.chart.showDataLabels">none</option>
-        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">stacked</option>
-        <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">none</option>
-        <option name="charting.layout.splitSeries">0</option>
-        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-        <option name="charting.legend.mode">standard</option>
-        <option name="charting.legend.placement">right</option>
-        <option name="charting.lineWidth">2</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
-      </chart>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
     </panel>
   </row>
   <row>
@@ -393,7 +409,7 @@
       <title>Matching vulnerable system count</title>
       <single>
         <search>
-          <query>| `tstats` dc(Vulnerabilities.dest) from datamodel=Vulnerabilities.Vulnerabilities where * by _time span=1d 
+          <query>| `tstats` dc(Vulnerabilities.dest) from datamodel=Vulnerabilities.Vulnerabilities where * by _time span=1d
 | stats dc(Vulnerabilities.dest)</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
@@ -418,13 +434,13 @@
       </single>
     </panel>
     <panel>
-      <title>Risk notables with MITRE ATT&amp;CK annotations</title>
+      <title>Risk notables with MITRE ATT&amp;CK annotations - last 30 days</title>
       <single>
         <search>
-          <query>index=risk sourcetype=stash
+          <query>index=notable eventtype=risk_notables
 | eventstats count as total
-| search annotations._frameworks="*mitre*"
-| stats count as "mitre" by total 
+| search mitre
+| stats count as "mitre" by total
 | eval percentage=(mitre*100)/total
 | table percentage</query>
           <earliest>-30d@d</earliest>
@@ -451,14 +467,14 @@
       </single>
     </panel>
     <panel>
-      <title>Risk notables with other framework annotations</title>
+      <title>Risk notables with other framework annotations - last 30 days</title>
       <single>
         <search>
-          <query>index=risk sourcetype=stash
+          <query>index=notable eventtype=risk_notables
 | eventstats count as total
-| search annotations._frameworks IN ("*cis*" "*nist*" "kill_chain*")
-| stats count as "frameworks" by total 
-| eval percentage=(frameworks*100)/total
+| search cis OR nist OR kill
+| stats count as "annotation" by total
+| eval percentage=(annotation*100)/total
 | table percentage</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
@@ -489,12 +505,45 @@
       <title>Reduction in notables by using the Attribution based approach</title>
       <single>
         <search>
-          <query>index=notable 
-| eval notable=if(eventtype="risk_notables","Risk Notable","Notable") 
-| stats count by notable 
-| transpose 0 header_field=notable 
-| eval p=round(100-('Risk Notable'/Notable)*100,1) 
+          <query>index=notable
+| eval notable=if(eventtype="risk_notables","Risk Notable","Notable")
+| stats count by notable
+| transpose 0 header_field=notable
+| eval p=round(100-('Risk Notable'/Notable)*100,1)
 | table p</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unit">%</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Percent of notables that are Risk Notables</title>
+      <single>
+        <search>
+          <query>index=notable
+| eventstats count as total
+| search eventtype=risk_notables
+| stats count as "risk" by total
+| eval percentage=(risk*100)/total
+| table percentage</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -522,8 +571,8 @@
       <title>Traditional Notables versus Risk Notables</title>
       <chart>
         <search>
-          <query>index=notable 
-| eval notable=if(eventtype="risk_notables","Risk Notable","Notable") 
+          <query>index=notable
+| eval notable=if(eventtype="risk_notables","Risk Notable","Notable")
 | timechart span=1h count by notable</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>

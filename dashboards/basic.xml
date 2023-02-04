@@ -13,7 +13,74 @@
       </condition>
     </done>
   </search>
-  <fieldset submitButton="false" autoRun="true"></fieldset>
+  <row>
+    <panel>
+      <html>
+        <style>
+          .dashboard-row .dashboard-panel {
+          border: .5px solid #7B7B7B;
+          }
+          .dashboard-panel h2{
+            font-weight: bold !important;
+            border-top-right-radius: 15px;
+            border-top-left-radius: 15px;
+          }
+        </style>
+      </html>
+      <title>Top DMA by size</title>
+      <chart>
+        <search>
+          <query>| rest /services/admin/summarization by_tstats="t" splunk_server=local
+| eval key=replace(title,(("tstats:DM_" . 'eai:acl.app') . "_"),""), datamodel=replace('summary.id',(("DM_" . 'eai:acl.app') . "_"),"")
+| join type=left key
+    [| rest /services/data/models splunk_server=local
+    | table title, "acceleration.cron_schedule", "eai:digest"
+    | rename title as key
+    | rename "acceleration.cron_schedule" as cron]
+| search NOT datamodel IN (Splunk_Audit Performance Updates)
+| table datamodel, "eai:acl.app", "summary.access_time", "summary.is_inprogress", "summary.size", "summary.latest_time", "summary.complete", "summary.buckets_size", "summary.buckets", cron, "summary.last_error", "summary.time_range", "summary.id", "summary.mod_time", "eai:digest", "summary.earliest_time", "summary.last_sid", "summary.access_count"
+| rename "summary.id" as summary_id, "summary.time_range" as retention, "summary.earliest_time" as earliest, "summary.latest_time" as latest, "eai:digest" as digest
+| rename "summary.*" as "*", "eai:acl.*" as "*"
+| sort datamodel
+| rename access_count as "Datamodel_Acceleration.access_count", access_time as "Datamodel_Acceleration.access_time", app as "Datamodel_Acceleration.app", buckets as "Datamodel_Acceleration.buckets", buckets_size as "Datamodel_Acceleration.buckets_size", cron as "Datamodel_Acceleration.cron", complete as "Datamodel_Acceleration.complete", datamodel as "Datamodel_Acceleration.datamodel", digest as "Datamodel_Acceleration.digest", earliest as "Datamodel_Acceleration.earliest", is_inprogress as "Datamodel_Acceleration.is_inprogress", last_error as "Datamodel_Acceleration.last_error", last_sid as "Datamodel_Acceleration.last_sid", latest as "Datamodel_Acceleration.latest", mod_time as "Datamodel_Acceleration.mod_time", retention as "Datamodel_Acceleration.retention", size as "Datamodel_Acceleration.size", summary_id as "Datamodel_Acceleration.summary_id"
+| fields + "Datamodel_Acceleration.access_count", "Datamodel_Acceleration.access_time", "Datamodel_Acceleration.app", "Datamodel_Acceleration.buckets", "Datamodel_Acceleration.buckets_size", "Datamodel_Acceleration.cron", "Datamodel_Acceleration.complete", "Datamodel_Acceleration.datamodel", "Datamodel_Acceleration.digest", "Datamodel_Acceleration.earliest", "Datamodel_Acceleration.is_inprogress", "Datamodel_Acceleration.last_error", "Datamodel_Acceleration.last_sid", "Datamodel_Acceleration.latest", "Datamodel_Acceleration.mod_time", "Datamodel_Acceleration.retention", "Datamodel_Acceleration.size", "Datamodel_Acceleration.summary_id"
+| rename "Datamodel_Acceleration.*" as "*"
+| join type=outer last_sid
+    [| rest /services/search/jobs reportsearch="summarize*" splunk_server=local
+    | rename sid as last_sid
+    | fields + last_sid, runDuration]
+| eval "size(MB)"=round((size / 1048576),1), "retention(days)"=if((retention == 0),"unlimited",round((retention / 86400),1)), "complete(%)"=round((complete * 100),1), "runDuration(s)"=round(runDuration,1)
+| sort 18 - size
+| table datamodel, "size(MB)"</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="height">350</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Assets and Identities Data Model event count</title>
+      <table>
+        <search>
+          <query>| `identities`
+| stats count
+| eval "Count Type"="Identities"
+| append
+    [ search `assets` | stats count | eval "Count Type"="Assets"]
+| table "Count Type", count</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
   <row>
     <panel>
       <title>ES Lookups enabled vs disabled</title>
@@ -23,7 +90,7 @@
 | search eai:acl.app=SplunkEnterpriseSecuritySuite
 | eventstats count as total
 | search disabled=0
-| stats count as "enabled" by total 
+| stats count as "enabled" by total
 | eval percentage=(enabled*100)/total</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
@@ -34,6 +101,28 @@
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </chart>
+    </panel>
+    <panel>
+      <title>Apps installed</title>
+      <table>
+        <search>
+          <query>| rest /services/apps/local splunk_server=local
+| search disabled=0 label IN ("ES Content Updates" "Splunk Security Essentials" "Splunk Common Information Model" "*phantom*" "*soar*" "*trustar*" "*intelligence*")
+| table label version
+| rename label as App
+| sort label</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
     </panel>
     <panel>
       <title>Notable Events in the past 30 days</title>
@@ -63,6 +152,8 @@
         <option name="useThousandSeparators">1</option>
       </single>
     </panel>
+  </row>
+  <row>
     <panel>
       <title>Incident Review page views in past 30 days</title>
       <single>
@@ -91,37 +182,20 @@
         <option name="useThousandSeparators">1</option>
       </single>
     </panel>
-  </row>
-  <row>
     <panel>
-      <title>Assets and Identities Data Model event count</title>
+      <title>SSE MITRE overview page views - past 30 days</title>
       <table>
         <search>
-          <query>| `identities`
-| stats count
-| eval "Count Type"="Identities"
-| append
-    [ search `assets` | stats count | eval "Count Type"="Assets"]
-| table "Count Type", count</query>
-          <earliest>-7d@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-      </table>
-    </panel>
-    <panel>
-      <title>Enabled ES Lookup Files</title>
-      <table>
-        <search>
-          <query>| rest /services/data/transforms/lookups splunk_server=local
-| search eai:acl.app=SplunkEnterpriseSecuritySuite
-| eventstats count as total
-| search disabled=0
-| stats count as "enabled" by total 
-| eval percentage=(enabled*100)/total</query>
-          <earliest>-24h@h</earliest>
+          <query>index=_internal sourcetype=splunk_web_access host=* user=*
+| rex field=uri_path ".*/(?&lt;title&gt;[^/]*)$$"
+| join title
+[| rest /servicesNS/-/-/data/ui/views splunk_server=local
+| search isDashboard=1 isVisible=1 eai:acl.app="Splunk_Security_Essentials" title="*mitre*"
+| rename eai:acl.app as app
+| fields title app ]
+| rename title as dashboard
+| stats count by dashboard</query>
+          <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
@@ -136,7 +210,7 @@
       </table>
     </panel>
     <panel>
-      <title>MITRE ATT&amp;CK coverage</title>
+      <title>Framework annotation coverage</title>
       <table>
         <search>
           <query>index=notable "annotations.mitre_attack"="*"
@@ -156,87 +230,14 @@
   </row>
   <row>
     <panel>
-      <title>Count of events by datamodel</title>
-      <input type="dropdown" token="modelname" searchWhenChanged="true">
-        <label>Data model name</label>
-        <fieldForLabel>modelName</fieldForLabel>
-        <fieldForValue>modelName</fieldForValue>
-        <search>
-          <query>| datamodel
-| rex field=_raw "\"modelName\"\s*\:\s*\"(?&lt;modelName&gt;[^\"]+)\""
-| fields modelName</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
-        </search>
-      </input>
-      <input type="time" token="field1">
-        <label></label>
-        <default>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
-        </default>
-      </input>
-      <single>
-        <title>Event Count</title>
-        <search>
-          <query>| tstats summariesonly=t min(_time) as min, max(_time) as max count from datamodel=$modelname$
-| eval "Event count" = count
-| fields "Event count"</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-      </single>
-    </panel>
-    <panel>
-      <title>Top DMA by size</title>
-      <chart>
-        <search>
-          <query>| rest /services/admin/summarization by_tstats="t" splunk_server=local 
-| eval key=replace(title,(("tstats:DM_" . 'eai:acl.app') . "_"),""), datamodel=replace('summary.id',(("DM_" . 'eai:acl.app') . "_"),"") 
-| join type=left key 
-    [| rest /services/data/models splunk_server=local 
-    | table title, "acceleration.cron_schedule", "eai:digest" 
-    | rename title as key 
-    | rename "acceleration.cron_schedule" as cron] 
-| search NOT datamodel IN (Splunk_Audit Performance Updates)
-| table datamodel, "eai:acl.app", "summary.access_time", "summary.is_inprogress", "summary.size", "summary.latest_time", "summary.complete", "summary.buckets_size", "summary.buckets", cron, "summary.last_error", "summary.time_range", "summary.id", "summary.mod_time", "eai:digest", "summary.earliest_time", "summary.last_sid", "summary.access_count" 
-| rename "summary.id" as summary_id, "summary.time_range" as retention, "summary.earliest_time" as earliest, "summary.latest_time" as latest, "eai:digest" as digest 
-| rename "summary.*" as "*", "eai:acl.*" as "*" 
-| sort datamodel 
-| rename access_count as "Datamodel_Acceleration.access_count", access_time as "Datamodel_Acceleration.access_time", app as "Datamodel_Acceleration.app", buckets as "Datamodel_Acceleration.buckets", buckets_size as "Datamodel_Acceleration.buckets_size", cron as "Datamodel_Acceleration.cron", complete as "Datamodel_Acceleration.complete", datamodel as "Datamodel_Acceleration.datamodel", digest as "Datamodel_Acceleration.digest", earliest as "Datamodel_Acceleration.earliest", is_inprogress as "Datamodel_Acceleration.is_inprogress", last_error as "Datamodel_Acceleration.last_error", last_sid as "Datamodel_Acceleration.last_sid", latest as "Datamodel_Acceleration.latest", mod_time as "Datamodel_Acceleration.mod_time", retention as "Datamodel_Acceleration.retention", size as "Datamodel_Acceleration.size", summary_id as "Datamodel_Acceleration.summary_id" 
-| fields + "Datamodel_Acceleration.access_count", "Datamodel_Acceleration.access_time", "Datamodel_Acceleration.app", "Datamodel_Acceleration.buckets", "Datamodel_Acceleration.buckets_size", "Datamodel_Acceleration.cron", "Datamodel_Acceleration.complete", "Datamodel_Acceleration.datamodel", "Datamodel_Acceleration.digest", "Datamodel_Acceleration.earliest", "Datamodel_Acceleration.is_inprogress", "Datamodel_Acceleration.last_error", "Datamodel_Acceleration.last_sid", "Datamodel_Acceleration.latest", "Datamodel_Acceleration.mod_time", "Datamodel_Acceleration.retention", "Datamodel_Acceleration.size", "Datamodel_Acceleration.summary_id" 
-| rename "Datamodel_Acceleration.*" as "*" 
-| join type=outer last_sid 
-    [| rest /services/search/jobs reportsearch="summarize*" splunk_server=local 
-    | rename sid as last_sid 
-    | fields + last_sid, runDuration] 
-| eval "size(MB)"=round((size / 1048576),1), "retention(days)"=if((retention == 0),"unlimited",round((retention / 86400),1)), "complete(%)"=round((complete * 100),1), "runDuration(s)"=round(runDuration,1) 
-| sort 18 - size 
-| table datamodel, "size(MB)"</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="charting.chart">bar</option>
-        <option name="charting.legend.placement">none</option>
-        <option name="height">350</option>
-        <option name="refresh.display">progressbar</option>
-      </chart>
-    </panel>
-  </row>
-  <row>
-    <panel>
       <title>Out-of-the-box RBA rules enabled</title>
       <table>
         <search>
-          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches 
+          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches
 | search action.correlationsearch.label IN ("ATT&amp;CK*" "Risk Threshold*")
-| eval disabled=case(disabled=0,"Yes",disabled=1,"No") 
+| eval disabled=case(disabled=0,"Yes",disabled=1,"No")
 | eval is_scheduled=case(is_scheduled=0,"No",is_scheduled=1,"Yes")
-| table action.correlationsearch.label disabled is_scheduled next_scheduled_time 
+| table action.correlationsearch.label disabled is_scheduled next_scheduled_time
 | rename action.correlationsearch.label AS "Incident Rule" disabled AS "Enabled" is_scheduled AS "Scheduled" next_scheduled_time AS "Next Scheduled Time"</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
@@ -255,117 +256,33 @@
   </row>
   <row>
     <panel>
-      <title>Dashboard page views by app</title>
-      <input type="dropdown" token="appnam" searchWhenChanged="true">
-        <label>App Name</label>
-        <choice value="*">All</choice>
-        <default>*</default>
-        <initialValue>*</initialValue>
-        <fieldForLabel>eai:acl.app</fieldForLabel>
-        <fieldForValue>eai:acl.app</fieldForValue>
+      <title>Risk Factors enabled</title>
+      <single>
         <search>
-          <query>| rest /servicesNS/-/-/data/ui/views splunk_server=*
-| search isDashboard=1 isVisible=1
-| fields eai:acl.app
-| dedup eai:acl.app</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
-        </search>
-      </input>
-      <input type="time" token="field2">
-        <label></label>
-        <default>
-          <earliest>-30d@d</earliest>
-          <latest>now</latest>
-        </default>
-      </input>
-      <table>
-        <search>
-          <query>index=_internal sourcetype=splunk_web_access host=* user=*
-| rex field=uri_path ".*/(?&lt;title&gt;[^/]*)$$"
-| join title
-[| rest /servicesNS/-/-/data/ui/views splunk_server=local
-| search isDashboard=1 isVisible=1 eai:acl.app=$appnam$
-| rename eai:acl.app as app
-| fields title app ]
-| rename title as dashboard
-| stats count by dashboard app</query>
-          <earliest>$field2.earliest$</earliest>
-          <latest>$field2.latest$</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-    <panel>
-      <title>Apps version</title>
-      <input type="dropdown" token="app3" searchWhenChanged="true">
-        <label>App Name</label>
-        <choice value="*">All</choice>
-        <default>*</default>
-        <initialValue>*</initialValue>
-        <fieldForLabel>label</fieldForLabel>
-        <fieldForValue>label</fieldForValue>
-        <search>
-          <query>| rest /services/apps/local
-| search disabled=0
-| dedup label
-| sort label</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
-        </search>
-      </input>
-      <table>
-        <search>
-          <query>| rest /services/apps/local splunk_server=local
-| search disabled=0 label="$app3$"
-| table label version
-| dedup label
-| sort  label</query>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.riskfactors_usage"
+| table data.total</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
         <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
     </panel>
-    <panel>
-      <title>Dashboards last updated</title>
-      <table>
-        <search>
-          <query>| rest /servicesNS/-/-/data/ui/views splunk_server=local
-| search isDashboard=1 isVisible=1 updated&gt;2006
-| table title updated</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-  </row>
-  <row>
     <panel>
       <title># of Risk Notables in the past 7 days</title>
       <single>

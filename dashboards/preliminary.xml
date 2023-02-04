@@ -2,7 +2,31 @@
   <label>Preliminary</label>
   <row>
     <panel>
+      <title>Core version</title>
+      <single>
+        <search>
+          <query>| rest splunk_server=local count=1 /services/server/info | table version</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
       <title>Enterprise Security Version</title>
+      <html>
+        <style>
+          .dashboard-row .dashboard-panel {
+          border: .5px solid #7B7B7B;
+          }
+          .dashboard-panel h2{
+            font-weight: bold !important;
+            border-top-right-radius: 15px;
+            border-top-left-radius: 15px;
+          }
+        </style>
+      </html>
       <single>
         <search>
           <query>| rest /services/apps/local splunk_server=local
@@ -34,7 +58,7 @@
       <table>
         <search>
           <query>| rest /services/apps/local splunk_server=local
-| search disabled=0 label IN ("ES Content Updates" "Splunk Security Essentials" "*soar*" "*uba*" "*behavior*" "*trustar*" "*intelligence*")
+| search disabled=0 label IN ("Enterprise Security" "ES Content Updates" "Splunk Security Essentials" "Splunk Common Information Model" "SA-Investigator" "Mission Control" "*soar*" "*phantom*" "*uba*" "*behavior*" "*trustar*" "*intelligence*")
 | table label version
 | rename label as App
 | sort label</query>
@@ -47,6 +71,37 @@
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
         <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Security-based data sources to data models (may take a minute to load due to the "map" command)</title>
+      <table>
+        <search>
+          <query>| datamodel
+| spath "objects{}.tsidxNamespace"
+| rename "objects{}.tsidxNamespace" as objectName
+| stats count by objectName
+| rex field="objectName" "datamodel=\"(?&lt;model&gt;[^.]+).(?&lt;dataset&gt;[^\"]+)"
+| where objectName!=""
+| map search="|tstats summariesonly=t count dc(host) as dc_host values($$dataset$$.tag) as tags
+             from datamodel=$$model$$.$$dataset$$ by index sourcetype | eval model=\"$$model$$.$$dataset$$\"" maxsearches=99
+| eval tags=mvjoin(tags,"|")
+| eval datamodel=mvindex(split(model,"."),0)
+| table datamodel, index, sourcetype, count
+| rename count as dm_events</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>

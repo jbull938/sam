@@ -3,85 +3,41 @@
   <row>
     <panel>
       <title>Asset &amp; Identity lookups enabled</title>
-      <table>
+      <html>
+        <style>
+          .dashboard-row .dashboard-panel {
+          border: .5px solid #7B7B7B;
+          }
+          .dashboard-panel h2{
+            font-weight: bold !important;
+            border-top-right-radius: 15px;
+            border-top-left-radius: 15px;
+          }
+        </style>
+      </html>
+      <single>
         <search>
-          <query>| rest /services/data/transforms/lookups 
-| search filename IN ("*asset*" "*identity*") disabled=0 
-| table eai:acl.app title filename updated 
-| sort eai:acl.app 
-| rename eai:acl.app as App, filename as "Lookup File", title as Title, updated AS "Last Updated"</query>
+          <query>| rest /services/data/transforms/lookups
+| search filename!="*demo*" filename IN ("*asset*" "*identity*") disabled=0
+| stats count</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>Number of correlation searches enabled</title>
-      <single>
-        <search>
-          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches 
-| search disabled=0 action.correlationsearch.enabled=1 
-| stats count</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </single>
     </panel>
     <panel>
-      <title>Enabled searches by app</title>
+      <title>Asset &amp; Identity lookups last updated</title>
       <table>
         <search>
-          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches 
-| search disabled=0
-| stats count by eai:acl.app</query>
+          <query>| rest /services/data/transforms/lookups
+| search   filename IN ("*asset*" "*identity*") disabled=0
+| table eai:acl.app title filename updated
+| sort eai:acl.app
+| rename eai:acl.app as App, filename as "Lookup File", title as Title, updated AS "Last Updated"</query>
           <earliest>-24h@h</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">5</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
-    </panel>
-    <panel>
-      <title>ES Dashboard views</title>
-      <table>
-        <search>
-          <query>index=_internal sourcetype=splunkd_ui_access 
-| rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)" 
-| search dashboard=ess_security_posture 
-| stats count 
-| eval "Count Type"="Security Posture" 
-| append 
-    [ search index=_internal sourcetype=splunkd_ui_access 
-    | rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)" 
-    | search dashboard=ess_soc_operations
-    | stats count 
-    | eval "Count Type"="SOC Operations"] 
-| append 
-    [ search index=_internal sourcetype=splunkd_ui_access 
-    | rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)" 
-    | search dashboard=ess_executive_summary
-    | stats count 
-    | eval "Count Type"="Executive Summary"] 
-| table "Count Type", count</query>
-          <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
@@ -97,13 +53,180 @@
   </row>
   <row>
     <panel>
-      <title>Percent of suppressed notables</title>
+      <title>Asset &amp; Identity lookup size (in bytes) - past 30 days</title>
+      <chart>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.lookup_usage" "data.transform" IN ("*asset*" "*identity*")
+| timechart span=1d useother=f values(data.size) by data.transform</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Number of correlation searches enabled</title>
       <single>
         <search>
-          <query>index=notable 
+          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches
+| search disabled=0 action.correlationsearch.enabled=1
+| stats count</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Enabled searches by app</title>
+      <table>
+        <search>
+          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches
+| search disabled=0 NOT eai:acl.app IN ("*test*" "search" "splunk_rapid_diag" "splunk_app_*" "splunk_archiver" "splunk_instrumentation" "splunk_monitoring_console")
+| stats count by eai:acl.app
+| rename eai:acl.app as App</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">5</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>ES Dashboard views - past 30 days</title>
+      <table>
+        <search>
+          <query>index=_internal sourcetype=splunkd_ui_access
+| rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)"
+| search dashboard=ess_security_posture
+| stats count
+| eval "Count Type"="Security Posture"
+| append
+    [ search index=_internal sourcetype=splunkd_ui_access
+    | rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)"
+    | search dashboard=ess_soc_operations
+    | stats count
+    | eval "Count Type"="SOC Operations"]
+| append
+    [ search index=_internal sourcetype=splunkd_ui_access
+    | rex "\\/data\\/ui\\/views\\/(?&lt;dashboard&gt;[^\?]+)"
+    | search dashboard=ess_executive_summary
+    | stats count
+    | eval "Count Type"="Executive Summary"]
+| table "Count Type", count
+| rename "Count Type" as Dashboard</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Avg duration (in seconds) on dashboard pages - past 30 days</title>
+      <chart>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.feature_usage" data.view IN ("ess_executive_summary" "ess_soc_operations" "ess_security_posture")
+| stats avg("data.avg_spent") by data.view
+| rename avg(data.avg_spent) as "Avg time spent in seconds", data.view as Dashboard</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Percent of suppressed notables - past 30 days</title>
+      <single>
+        <search>
+          <query>index=notable
 | eventstats count as total
 | search eventtype=notable_suppression-* OR suppression=*
-| stats count as "suppression" by total 
+| stats count as "suppression" by total
 | eval percentage=(suppression*100)/total
 | table percentage</query>
           <earliest>-30d@d</earliest>
@@ -115,6 +238,39 @@
         <option name="refresh.display">progressbar</option>
         <option name="unit">%</option>
       </single>
+    </panel>
+    <panel>
+      <title>Mean time to triage for High or Critical incidents - last 7 days</title>
+      <table>
+        <search>
+          <query>| tstats `summariesonly` earliest(_time) as _time from datamodel=Incident_Management.Notable_Events_Meta by source,Notable_Events_Meta.rule_id
+| `drop_dm_object_name("Notable_Events_Meta")`
+| `get_correlations`
+| join rule_id
+    [| from inputlookup:incident_review_lookup
+    | search urgency IN (high critical)
+    | eval _time=time
+    | stats earliest(_time) as review_time by rule_id]
+| eval ttt=review_time-_time
+| stats count,avg(ttt) as avg_ttt,max(ttt) as max_ttt by rule_name
+| sort - avg_ttt
+| `uptime2string(avg_ttt, avg_ttt)`
+| `uptime2string(max_ttt, max_ttt)`
+| rename *_ttt* as *(time_to_triage)*
+| fields - *_dec</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
     </panel>
     <panel>
       <title>Investigations created - past 30 days</title>
@@ -146,94 +302,43 @@
     </panel>
     <panel>
       <title>Number of collaborators per unclosed investigation</title>
-      <chart>
+      <table>
         <search>
-          <query>| rest splunk_server=local count=0 /services/storage/investigation/investigation earliest="-7d@h" latest="now" 
-| lookup update=true user_realnames_lookup user as "creator" OUTPUTNEW realname as "creator_realname" 
-| eval "creator_realname"=if(isnull('creator_realname'),'creator','creator_realname') 
-| eval _time=create_time, id=title 
-| spath output="temp_es_status" input="status" path={} 
-| spath output="current_status_name" input="temp_es_status" path=name 
-| spath output="current_status_id" input="temp_es_status" path=id 
-| spath output="current_status_time" input="temp_es_status" path=time 
-| fields - temp_es_* 
-| join type=outer current_status_id 
-    [| rest splunk_server=local count=0 /services/alerts/reviewstatuses 
-    | search status_type=investigation 
-    | rename title as "current_status_id", end as "current_status_end" 
-    | fields "current_status_id", "current_status_end"] 
-| spath output="temp_es_collaborators" input="collaborators" path={} 
-| eval "collaborator_count"=mvcount('temp_es_collaborators') 
-| eval "collaborator_count"=if(isNull('collaborator_count'), 0, 'collaborator_count') 
-| fields - temp_es_* 
-| where NOT current_status_end=1 
-| top collaborator_count</query>
+          <query>| `investigations`
+| stats count by collaborators</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-        <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.visibility">visible</option>
-        <option name="charting.axisTitleY2.visibility">visible</option>
-        <option name="charting.axisX.abbreviation">none</option>
-        <option name="charting.axisX.scale">linear</option>
-        <option name="charting.axisY.abbreviation">none</option>
-        <option name="charting.axisY.scale">linear</option>
-        <option name="charting.axisY2.abbreviation">none</option>
-        <option name="charting.axisY2.enabled">0</option>
-        <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">pie</option>
-        <option name="charting.chart.bubbleMaximumSize">50</option>
-        <option name="charting.chart.bubbleMinimumSize">10</option>
-        <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
-        <option name="charting.chart.showDataLabels">none</option>
-        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">default</option>
-        <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">none</option>
-        <option name="charting.layout.splitSeries">0</option>
-        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-        <option name="charting.legend.mode">standard</option>
-        <option name="charting.legend.placement">right</option>
-        <option name="charting.lineWidth">2</option>
-        <option name="trellis.enabled">0</option>
-        <option name="trellis.scales.shared">1</option>
-        <option name="trellis.size">medium</option>
-      </chart>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Vulnerability matching assets</title>
-      <table>
+      <title>Vulnerability matching assets - last 30 days</title>
+      <single>
         <search>
-          <query>| tstats `summariesonly` count from datamodel=Vulnerabilities.Vulnerabilities where earliest=-30d@d latest=+0s `cim_filter_vuln_severity("Vulnerabilities")` by Vulnerabilities.signature,Vulnerabilities.dest</query>
+          <query>| tstats `summariesonly` count from datamodel=Vulnerabilities.Vulnerabilities where earliest=-30d@d latest=+0s `cim_filter_vuln_severity("Vulnerabilities")` by Vulnerabilities.signature,Vulnerabilities.dest
+| stats count</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="count">20</option>
-        <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
+        <option name="refresh.display">progressbar</option>
+      </single>
     </panel>
     <panel>
       <title>Enabled correlation searches with MITRE ATT&amp;CK annotations</title>
       <single>
         <search>
           <query>| rest /services/saved/searches splunk_server=local
-| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0") 
+| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0")
 | eventstats count as total
 | search action.correlationsearch.annotations="*mitre*"
-| stats count as "mitre" by total 
+| stats count as "mitre" by total
 | eval percentage=(mitre*100)/total
 | table percentage</query>
           <earliest>-30d@d</earliest>
@@ -251,10 +356,10 @@
       <single>
         <search>
           <query>| rest /services/saved/searches splunk_server=local
-| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0") 
+| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0")
 | eventstats count as total
 | search action.correlationsearch.annotations IN ("*cis*" "*nist*" "kill_chain*")
-| stats count as "frameworks" by total 
+| stats count as "frameworks" by total
 | eval percentage=(frameworks*100)/total
 | table percentage</query>
           <earliest>-30d@d</earliest>
@@ -271,11 +376,11 @@
       <title>Searches that are risk rules</title>
       <single>
         <search>
-          <query>| rest /services/saved/searches splunk_server=local 
-| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") 
+          <query>| rest /services/saved/searches splunk_server=local
+| where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]")
 | eventstats count as total
 | search action.risk.param._risk="*score*"
-| stats count as "riskrules" by total 
+| stats count as "riskrules" by total
 | eval percentage=(riskrules*100)/total
 | table percentage</query>
           <earliest>-30d@d</earliest>
@@ -291,29 +396,120 @@
   </row>
   <row>
     <panel>
-      <title>Adaptive Response Actions by name - past 24 hours</title>
-      <table>
+      <title>MITRE ATT&amp;CK</title>
+      <single>
         <search>
-          <query>| tstats `summariesonly` latest(Modular_Actions.action_status) as action_status,values(Modular_Actions.search_name) as search_name,latest(Modular_Actions.duration) as duration from datamodel=Splunk_Audit.Modular_Actions where * by Modular_Actions.action_mode,Modular_Actions.action_name,Modular_Actions.sid,Modular_Actions.rid,Modular_Actions.user 
-| search 
-| stats values(Modular_Actions.action_mode) as action_mode,values(search_name) as search_name,values(Modular_Actions.user) as user,dc(Modular_Actions.sid) as search_count,avg(duration) as "avg_duration (ms)",count as result_count by Modular_Actions.action_name 
-| eval "avg_duration (ms)"=round('avg_duration (ms)', 1) 
-| rename Modular_Actions.action_name as action_name 
-| sort 10 - result_count 
-| `es_get_cam` 
-| fields action_name,cam_category,cam_subject,action_mode,search_name,user,search_count,result_count,"avg_duration (ms)"</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.annotations_usage"
+| table data.searches_with_mitre_attack
+| rename data.searches_with_mitre_attack as "MITRE ATT&amp;CK"</query>
+          <earliest>1675400400.000</earliest>
+          <latest>1675487075.000</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="count">20</option>
-        <option name="dataOverlayMode">none</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
         <option name="drilldown">none</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-      </table>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>CIS20</title>
+      <single>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.annotations_usage"
+| table  data.searches_with_cis20
+| rename data.searches_with_cis20 as CIS20</query>
+          <earliest>1675400400.000</earliest>
+          <latest>1675487075.000</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Kill Chain</title>
+      <single>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.annotations_usage"
+| table data.searches_with_kill_chain_phases
+| rename data.searches_with_kill_chain_phases as "Kill Chain"</query>
+          <earliest>1675400400.000</earliest>
+          <latest>1675487075.000</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>NIST</title>
+      <single>
+        <search>
+          <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.annotations_usage"
+| table data.searches_with_nist
+| rename data.searches_with_nist as NIST</query>
+          <earliest>1675400400.000</earliest>
+          <latest>1675487075.000</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
     </panel>
   </row>
   <row>
@@ -321,38 +517,38 @@
       <title>Threat artifacts</title>
       <table>
         <search>
-          <query>| inputlookup append=T service_intel max=`threat_artifacts_max` where * 
-| `set_threat_collection_name("service_intel")` 
-| eval file_name=mvappend(service_file_name,service_dll_file_name), file_path=mvappend(service_file_path, service_dll_file_path), file_hash=mvappend(service_file_hash, service_dll_file_hash) 
-| inputlookup append=T process_intel max=`threat_artifacts_max` where * 
-| `set_threat_collection_name("process_intel")` 
-| eval ip=mvappend(src, dest), domain=mvappend(src, dest) 
-| inputlookup append=T file_intel max=`threat_artifacts_max` where * 
-| `set_threat_collection_name("file_intel")` 
-| inputlookup append=T certificate_intel max=`threat_artifacts_max` where * 
-| `set_threat_collection_name("certificate_intel")` 
-| fillnull value="" certificate_serial 
-| mvexpand certificate_serial 
-| `get_certificate_serial` 
-| eventstats values(certificate_serial) as certificate_serial,values(certificate_serial_clean) as certificate_serial_clean,values(certificate_serial_dec) as certificate_serial_dec by _key 
-| dedup _key,threat_collection 
-| inputlookup append=T email_intel max=`threat_artifacts_max` where * 
-| `set_threat_collection_name("email_intel")` 
-| inputlookup append=T http_intel max=`threat_artifacts_max` where * 
-| `set_threat_collection_name("http_intel")` 
-| inputlookup append=T ip_intel max=`threat_artifacts_max` where * 
-| `set_threat_collection_name("ip_intel")` 
-| inputlookup append=T registry_intel max=`threat_artifacts_max` where * 
-| `set_threat_collection_name("registry_intel")` 
-| inputlookup append=T user_intel max=`threat_artifacts_max` where * 
-| fillnull value=0 updated,disabled 
-| `set_threat_collection_name("user_intel")` 
-| eval file_hash=coalesce(certificate_file_hash,file_hash), src_user=coalesce(certificate_issuer_email,src_user), actual_src_user=coalesce(certificate_subject_email,actual_src_user), ip=coalesce(embedded_ip,ip), domain=coalesce(embedded_domain,domain), file_name=coalesce(process_file_name,file_name), file_path=coalesce(process_file_path,file_path) 
-| stats dc(file_hash) as file_hash_count, dc(file_name) as file_name_count, dc(certificate_serial) as certificate_serial_count, dc(certificate_issuer_common_name) as certificate_issuer_common_name_count, dc(src_user) as src_user_count, dc(certificate_issuer_organization) as certificate_issuer_organization_count, dc(certificate_issuer_unit) as certificate_issuer_unit_count, dc(certificate_subject_common_name) as certificate_subject_common_name_count, dc(actual_src_user) as actual_src_user_count, dc(certificate_subject_organization) as certificate_subject_organization_count, dc(certificate_subject_unit) as certificate_subject_unit_count, dc(ip) as ip_count, dc(domain) as domain_count, dc(subject) as subject_count, dc(http_user_agent) as http_user_agent_count, dc(http_referrer) as http_referrer_count, dc(url) as url_count, dc(header) as header_count, dc(process) as process_count, dc(process_handle_name) as process_handle_name_count, dc(registry_path) as registry_path_count, dc(registry_value_name) as registry_value_name_count, dc(registry_value_text) as registry_value_text_count, dc(service) as service_count, dc(user) as user_count by threat_key 
-| `get_threat_attribution(threat_key)` 
-| search 
-| addtotals fieldname=count *_count 
-| fields source_id, source_path, source_type, threat_group, threat_category, malware_alias, count 
+          <query>| inputlookup append=T service_intel max=`threat_artifacts_max` where *
+| `set_threat_collection_name("service_intel")`
+| eval file_name=mvappend(service_file_name,service_dll_file_name), file_path=mvappend(service_file_path, service_dll_file_path), file_hash=mvappend(service_file_hash, service_dll_file_hash)
+| inputlookup append=T process_intel max=`threat_artifacts_max` where *
+| `set_threat_collection_name("process_intel")`
+| eval ip=mvappend(src, dest), domain=mvappend(src, dest)
+| inputlookup append=T file_intel max=`threat_artifacts_max` where *
+| `set_threat_collection_name("file_intel")`
+| inputlookup append=T certificate_intel max=`threat_artifacts_max` where *
+| `set_threat_collection_name("certificate_intel")`
+| fillnull value="" certificate_serial
+| mvexpand certificate_serial
+| `get_certificate_serial`
+| eventstats values(certificate_serial) as certificate_serial,values(certificate_serial_clean) as certificate_serial_clean,values(certificate_serial_dec) as certificate_serial_dec by _key
+| dedup _key,threat_collection
+| inputlookup append=T email_intel max=`threat_artifacts_max` where *
+| `set_threat_collection_name("email_intel")`
+| inputlookup append=T http_intel max=`threat_artifacts_max` where *
+| `set_threat_collection_name("http_intel")`
+| inputlookup append=T ip_intel max=`threat_artifacts_max` where *
+| `set_threat_collection_name("ip_intel")`
+| inputlookup append=T registry_intel max=`threat_artifacts_max` where *
+| `set_threat_collection_name("registry_intel")`
+| inputlookup append=T user_intel max=`threat_artifacts_max` where *
+| fillnull value=0 updated,disabled
+| `set_threat_collection_name("user_intel")`
+| eval file_hash=coalesce(certificate_file_hash,file_hash), src_user=coalesce(certificate_issuer_email,src_user), actual_src_user=coalesce(certificate_subject_email,actual_src_user), ip=coalesce(embedded_ip,ip), domain=coalesce(embedded_domain,domain), file_name=coalesce(process_file_name,file_name), file_path=coalesce(process_file_path,file_path)
+| stats dc(file_hash) as file_hash_count, dc(file_name) as file_name_count, dc(certificate_serial) as certificate_serial_count, dc(certificate_issuer_common_name) as certificate_issuer_common_name_count, dc(src_user) as src_user_count, dc(certificate_issuer_organization) as certificate_issuer_organization_count, dc(certificate_issuer_unit) as certificate_issuer_unit_count, dc(certificate_subject_common_name) as certificate_subject_common_name_count, dc(actual_src_user) as actual_src_user_count, dc(certificate_subject_organization) as certificate_subject_organization_count, dc(certificate_subject_unit) as certificate_subject_unit_count, dc(ip) as ip_count, dc(domain) as domain_count, dc(subject) as subject_count, dc(http_user_agent) as http_user_agent_count, dc(http_referrer) as http_referrer_count, dc(url) as url_count, dc(header) as header_count, dc(process) as process_count, dc(process_handle_name) as process_handle_name_count, dc(registry_path) as registry_path_count, dc(registry_value_name) as registry_value_name_count, dc(registry_value_text) as registry_value_text_count, dc(service) as service_count, dc(user) as user_count by threat_key
+| `get_threat_attribution(threat_key)`
+| search
+| addtotals fieldname=count *_count
+| fields source_id, source_path, source_type, threat_group, threat_category, malware_alias, count
 | sort + threat_group, threat_category, - count</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
