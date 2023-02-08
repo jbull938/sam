@@ -60,7 +60,7 @@
           <query>| rest /services/apps/local splunk_server=local
 | search disabled=0 label IN ("Enterprise Security" "ES Content Updates" "Splunk Security Essentials" "Splunk Common Information Model" "SA-Investigator" "Mission Control" "*soar*" "*phantom*" "*uba*" "*behavior*" "*trustar*" "*intelligence*")
 | table label version
-| rename label as App
+| rename label as App, version as Version
 | sort label</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
@@ -93,7 +93,7 @@
 | eval tags=mvjoin(tags,"|")
 | eval datamodel=mvindex(split(model,"."),0)
 | table datamodel, index, sourcetype, count
-| rename count as dm_events</query>
+| rename datamodel as "Data model", index as Index, sourcetype as Sourcetype, count as "# of events"</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -102,6 +102,7 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>

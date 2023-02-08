@@ -305,7 +305,7 @@
 | sort - avg_ttt
 | `uptime2string(avg_ttt, avg_ttt)`
 | `uptime2string(max_ttt, max_ttt)`
-| rename *_ttt* as *(time_to_triage)*
+| rename *_ttt* as *(time_to_triage)*, rule_name as "Rule Name", count as "Count", avg(time_to_triage) as "Avg time to triage", max(time_to_triage) as "Max time to triage"
 | fields - *_dec</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
@@ -315,6 +315,7 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
@@ -327,7 +328,8 @@
       <table>
         <search>
           <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.search_actions" "data.is_adaptive_response"=1
-| stats values(data.count) by data.action</query>
+| stats values(data.count) by data.action
+| rename data.action as "Action", values(data.count) as Count</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -336,6 +338,7 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>

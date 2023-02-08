@@ -18,7 +18,8 @@
       <chart>
         <search>
           <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.active_users"
-| timechart values(data.admin_count)</query>
+| timechart values(data.admin_count)
+| rename values(data.admin_count) as "# of logins"</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -62,7 +63,8 @@
       <chart>
         <search>
           <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.active_users"
-| timechart values(data.analyst_count)</query>
+| timechart values(data.analyst_count)
+| rename values(data.admin_count) as "# of logins"</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -214,7 +216,8 @@
         <search>
           <query>| rest /services/saved/searches splunk_server=local
 | where match('action.correlationsearch.enabled', "1|[Tt]|[Tt][Rr][Uu][Ee]") and match('is_scheduled',"1") and match('disabled',"0")
-| stats count by eai:acl.app</query>
+| stats count by eai:acl.app
+| rename eai:acl.app as "App", count as Count</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -223,6 +226,7 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
@@ -251,7 +255,8 @@
     | search dashboard=vuln_operations
     | stats count
     | eval "Count Type"="Vulnerability Operations"]
-| table "Count Type", count</query>
+| table "Count Type", count
+| rename count as Count</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -260,6 +265,7 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
@@ -338,8 +344,8 @@
     </panel>
   </row>
   <row>
-
     <panel id="notablePanel">
+      <title>Notables - past 30 days</title>
       <html>
         <style>
           #notablePanel{
@@ -350,13 +356,13 @@
           }
         </style>
       </html>
-      <title>Notables - past 30 days</title>
       <chart>
         <search>
           <query>index=notable
 | eval notable_type=if(isnotnull(risk_object) AND isnotnull(risk_object_type), "Risk Notable", "Notable")
 | fields notable_type, count
-| timechart span=1d count by notable_type</query>
+| timechart span=1d count by notable_type
+| rename _time as Date</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -389,6 +395,7 @@
         <option name="charting.legend.mode">standard</option>
         <option name="charting.legend.placement">right</option>
         <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>

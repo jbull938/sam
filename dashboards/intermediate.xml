@@ -17,7 +17,7 @@
       </html>
       <single>
         <search>
-          <query>| rest /services/data/transforms/lookups
+          <query>| rest /services/data/transforms/lookups splunk_server=local
 | search filename!="*demo*" filename IN ("*asset*" "*identity*") disabled=0
 | stats count</query>
           <earliest>-7d@h</earliest>
@@ -32,7 +32,7 @@
       <title>Asset &amp; Identity lookups last updated</title>
       <table>
         <search>
-          <query>| rest /services/data/transforms/lookups
+          <query>| rest /services/data/transforms/lookups  splunk_server=local
 | search   filename IN ("*asset*" "*identity*") disabled=0
 | table eai:acl.app title filename updated
 | sort eai:acl.app
@@ -45,6 +45,7 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
@@ -118,7 +119,7 @@
           <query>| rest splunk_server=local /servicesNS/-/-/saved/searches
 | search disabled=0 NOT eai:acl.app IN ("*test*" "search" "splunk_rapid_diag" "splunk_app_*" "splunk_archiver" "splunk_instrumentation" "splunk_monitoring_console")
 | stats count by eai:acl.app
-| rename eai:acl.app as App</query>
+| rename eai:acl.app as App, count as Count</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -157,7 +158,7 @@
     | stats count
     | eval "Count Type"="Executive Summary"]
 | table "Count Type", count
-| rename "Count Type" as Dashboard</query>
+| rename "Count Type" as Dashboard, count as Count</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -256,7 +257,7 @@
 | sort - avg_ttt
 | `uptime2string(avg_ttt, avg_ttt)`
 | `uptime2string(max_ttt, max_ttt)`
-| rename *_ttt* as *(time_to_triage)*
+| rename *_ttt* as *(time_to_triage)*, rule_name as "Rule Name", count as "Count", avg(time_to_triage) as "Avg time to triage", max(time_to_triage) as "Max time to triage"
 | fields - *_dec</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
@@ -301,18 +302,25 @@
       </single>
     </panel>
     <panel>
-      <title>Number of collaborators per unclosed investigation</title>
-      <table>
+      <title>Number of investigations with more than one collaborator</title>
+      <single>
         <search>
           <query>| `investigations`
-| stats count by collaborators</query>
+| fields collaborators id
+| rename collaborators as _raw
+| spath
+| rename {}.name as collaborators
+| mvexpand collaborators
+| stats dc(collaborators) by id
+| where 'dc(collaborators)' &gt; 1
+| stats count</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
-      </table>
+      </single>
     </panel>
   </row>
   <row>
