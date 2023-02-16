@@ -58,7 +58,7 @@
       <table>
         <search>
           <query>| rest /services/apps/local splunk_server=local
-| search disabled=0 label IN ("Enterprise Security" "ES Content Updates" "Splunk Security Essentials" "Splunk Common Information Model" "SA-Investigator" "Mission Control" "*soar*" "*phantom*" "*uba*" "*behavior*" "*trustar*" "*intelligence*")
+| search disabled=0 label IN ("ES Content Updates" "Splunk Security Essentials" "Splunk Common Information Model" "SA-Investigator" "Mission Control" "*soar*" "*phantom*" "*uba*" "*behavior*" "*trustar*" "*intelligence*" "*mitre*" "*threat*" "*security*")
 | table label version
 | rename label as App, version as Version
 | sort label</query>
@@ -82,19 +82,19 @@
       <title>Security-based data sources to data models (may take a minute to load due to the "map" command)</title>
       <table>
         <search>
-          <query>| datamodel
-| spath "objects{}.tsidxNamespace"
-| rename "objects{}.tsidxNamespace" as objectName
-| stats count by objectName
-| rex field="objectName" "datamodel=\"(?&lt;model&gt;[^.]+).(?&lt;dataset&gt;[^\"]+)"
-| where objectName!=""
-| map search="|tstats summariesonly=t count dc(host) as dc_host values($$dataset$$.tag) as tags
-             from datamodel=$$model$$.$$dataset$$ by index sourcetype | eval model=\"$$model$$.$$dataset$$\"" maxsearches=99
-| eval tags=mvjoin(tags,"|")
-| eval datamodel=mvindex(split(model,"."),0)
-| table datamodel, index, sourcetype, count
-| rename datamodel as "Data model", index as Index, sourcetype as Sourcetype, count as "# of events"</query>
-          <earliest>-15m</earliest>
+          <query>| datamodel 
+| spath "objects{}.tsidxNamespace" 
+| rename "objects{}.tsidxNamespace" as objectName 
+| stats count by objectName 
+| rex field="objectName" "datamodel=\"(?&lt;model&gt;[^.]+).(?&lt;dataset&gt;[^\"]+)" 
+| where objectName!="" 
+| map search="|tstats summariesonly=t count dc(host) as dc_host values($$dataset$$.tag) as tags 
+             from datamodel=$$model$$.$$dataset$$ by index sourcetype | eval model=\"$$model$$.$$dataset$$\"" maxsearches=99 
+| eval tags=mvjoin(tags,"|") 
+| eval datamodel=mvindex(split(model,"."),0) 
+| table datamodel, index, sourcetype, count 
+| rename datamodel as "Data Model", index as Index, sourcetype as Sourcetype, count as "Data Model Events"</query>
+          <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>

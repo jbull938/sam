@@ -80,8 +80,8 @@
       <title>Assets by category</title>
       <chart>
         <search>
-          <query>| inputlookup append=T asset_lookup_by_str where * asset="*"
-| inputlookup append=t asset_lookup_by_cidr where * asset="*"
+          <query>| inputlookup append=T asset_lookup_by_str where * asset="*" 
+| inputlookup append=t asset_lookup_by_cidr where * asset="*" 
 | stats count by category</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
@@ -115,6 +115,7 @@
         <option name="charting.legend.mode">standard</option>
         <option name="charting.legend.placement">right</option>
         <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
@@ -152,12 +153,12 @@
       <title>Identities by category</title>
       <chart>
         <search>
-          <query>| inputlookup identity_lookup_expanded where *
-| fillnull value="" priority, bunit, category, watchlist
-| eval category_=mvjoin(category, " ")
-| stats values(category) as category, count by priority, bunit, category_, watchlist
-| search
-| stats sum(count) as count by category
+          <query>| inputlookup identity_lookup_expanded where * 
+| fillnull value="" priority, bunit, category, watchlist 
+| eval category_=mvjoin(category, " ") 
+| stats values(category) as category, count by priority, bunit, category_, watchlist 
+| search 
+| stats sum(count) as count by category 
 | where category!=""</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
@@ -258,11 +259,11 @@
       <title>Percent of unassigned High or Critical incidents</title>
       <single>
         <search>
-          <query>| inputlookup incident_review_lookup
-| search urgency IN (high critical)
-| eventstats count as total
-| where isnull(owner)
-| stats count as "unassigned" by total
+          <query>| inputlookup incident_review_lookup 
+| search urgency IN (high critical) 
+| eventstats count as total 
+| where isnull(owner) 
+| stats count as "unassigned" by total 
 | eval percentage=(unassigned*100)/total
 | table percentage</query>
           <earliest>-7d@h</earliest>
@@ -292,20 +293,20 @@
       <title>Mean Time to Triage Critical Incidents</title>
       <table>
         <search>
-          <query>| tstats `summariesonly` earliest(_time) as _time from datamodel=Incident_Management.Notable_Events_Meta by source,Notable_Events_Meta.rule_id
-| `drop_dm_object_name("Notable_Events_Meta")`
-| `get_correlations`
-| join rule_id
+          <query>| tstats `summariesonly` earliest(_time) as _time from datamodel=Incident_Management.Notable_Events_Meta by source,Notable_Events_Meta.rule_id 
+| `drop_dm_object_name("Notable_Events_Meta")` 
+| `get_correlations` 
+| join rule_id 
     [| from inputlookup:incident_review_lookup
     | search urgency=critical
-    | eval _time=time
-    | stats earliest(_time) as review_time by rule_id]
-| eval ttt=review_time-_time
-| stats count,avg(ttt) as avg_ttt,max(ttt) as max_ttt by rule_name
-| sort - avg_ttt
-| `uptime2string(avg_ttt, avg_ttt)`
-| `uptime2string(max_ttt, max_ttt)`
-| rename *_ttt* as *(time_to_triage)*, rule_name as "Rule Name", count as "Count", avg(time_to_triage) as "Avg time to triage", max(time_to_triage) as "Max time to triage"
+    | eval _time=time 
+    | stats earliest(_time) as review_time by rule_id] 
+| eval ttt=review_time-_time 
+| stats count,avg(ttt) as avg_ttt,max(ttt) as max_ttt by rule_name 
+| sort - avg_ttt 
+| `uptime2string(avg_ttt, avg_ttt)` 
+| `uptime2string(max_ttt, max_ttt)` 
+| rename *_ttt* as *(time_to_triage)*, rule_name as "Rule Name",count as Count, avg(time_to_triage) as "Avg Time to Triage", max(time_to_triage) as "Max Time to Triage"
 | fields - *_dec</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
@@ -329,7 +330,7 @@
         <search>
           <query>index=_introspection sourcetype=splunk_telemetry app=SplunkEnterpriseSecuritySuite component="app.SplunkEnterpriseSecuritySuite.search_actions" "data.is_adaptive_response"=1
 | stats values(data.count) by data.action
-| rename data.action as "Action", values(data.count) as Count</query>
+| rename data.action as "Adaptive Response Action", values(data.count) as "Count"</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -376,13 +377,13 @@
       <title>Total Adaptive Response Actions triggered - last 30 days</title>
       <single>
         <search>
-          <query>| tstats `summariesonly` latest(Modular_Actions.action_status) as action_status,values(Modular_Actions.search_name) as search_name,latest(Modular_Actions.duration) as duration from datamodel=Splunk_Audit.Modular_Actions where * by Modular_Actions.action_mode,Modular_Actions.action_name,Modular_Actions.sid,Modular_Actions.rid,Modular_Actions.user
-| search
-| stats values(Modular_Actions.action_mode) as action_mode,values(search_name) as search_name,values(Modular_Actions.user) as user,dc(Modular_Actions.sid) as search_count,avg(duration) as "avg_duration (ms)",count as result_count by Modular_Actions.action_name
-| eval "avg_duration (ms)"=round('avg_duration (ms)', 1)
-| rename Modular_Actions.action_name as action_name
-| sort 10 - result_count
-| `es_get_cam`
+          <query>| tstats `summariesonly` latest(Modular_Actions.action_status) as action_status,values(Modular_Actions.search_name) as search_name,latest(Modular_Actions.duration) as duration from datamodel=Splunk_Audit.Modular_Actions where * by Modular_Actions.action_mode,Modular_Actions.action_name,Modular_Actions.sid,Modular_Actions.rid,Modular_Actions.user 
+| search 
+| stats values(Modular_Actions.action_mode) as action_mode,values(search_name) as search_name,values(Modular_Actions.user) as user,dc(Modular_Actions.sid) as search_count,avg(duration) as "avg_duration (ms)",count as result_count by Modular_Actions.action_name 
+| eval "avg_duration (ms)"=round('avg_duration (ms)', 1) 
+| rename Modular_Actions.action_name as action_name 
+| sort 10 - result_count 
+| `es_get_cam` 
 | stats sum(search_count)</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
@@ -409,11 +410,10 @@
   </row>
   <row>
     <panel>
-      <title>Matching vulnerable system count</title>
+      <title>Matching vulnerable system count - past 30 days</title>
       <single>
         <search>
-          <query>| `tstats` dc(Vulnerabilities.dest) from datamodel=Vulnerabilities.Vulnerabilities where * by _time span=1d
-| stats dc(Vulnerabilities.dest)</query>
+          <query>| tstats summariesonly=true dc(Vulnerabitities.dest) from datamodel=Vulnerabilities.Vulnerabilities</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -424,6 +424,7 @@
         <option name="numberPrecision">0</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trellis.enabled">0</option>
@@ -475,7 +476,7 @@
         <search>
           <query>index=notable eventtype=risk_notables
 | eventstats count as total
-| search cis OR nist OR kill
+| search cis OR nist OR kill 
 | stats count as "annotation" by total
 | eval percentage=(annotation*100)/total
 | table percentage</query>
@@ -508,11 +509,11 @@
       <title>Reduction in notables by using the Attribution based approach</title>
       <single>
         <search>
-          <query>index=notable
-| eval notable=if(eventtype="risk_notables","Risk Notable","Notable")
-| stats count by notable
-| transpose 0 header_field=notable
-| eval p=round(100-('Risk Notable'/Notable)*100,1)
+          <query>index=notable 
+| eval notable=if(eventtype="risk_notables","Risk Notable","Notable") 
+| stats count by notable 
+| transpose 0 header_field=notable 
+| eval p=round(100-('Risk Notable'/Notable)*100,1) 
 | table p</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
@@ -541,7 +542,7 @@
       <title>Percent of notables that are Risk Notables</title>
       <single>
         <search>
-          <query>index=notable
+          <query>index=notable 
 | eventstats count as total
 | search eventtype=risk_notables
 | stats count as "risk" by total
@@ -574,8 +575,8 @@
       <title>Traditional Notables versus Risk Notables</title>
       <chart>
         <search>
-          <query>index=notable
-| eval notable=if(eventtype="risk_notables","Risk Notable","Notable")
+          <query>index=notable 
+| eval notable=if(eventtype="risk_notables","Risk Notable","Notable") 
 | timechart span=1h count by notable</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>

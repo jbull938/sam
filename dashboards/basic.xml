@@ -30,29 +30,29 @@
       </html>
       <chart>
         <search>
-          <query>| rest /services/admin/summarization by_tstats="t" splunk_server=local
-| eval key=replace(title,(("tstats:DM_" . 'eai:acl.app') . "_"),""), datamodel=replace('summary.id',(("DM_" . 'eai:acl.app') . "_"),"")
-| join type=left key
-    [| rest /services/data/models splunk_server=local
-    | table title, "acceleration.cron_schedule", "eai:digest"
-    | rename title as key
-    | rename "acceleration.cron_schedule" as cron]
+          <query>| rest /services/admin/summarization by_tstats="t" splunk_server=local 
+| eval key=replace(title,(("tstats:DM_" . 'eai:acl.app') . "_"),""), datamodel=replace('summary.id',(("DM_" . 'eai:acl.app') . "_"),"") 
+| join type=left key 
+    [| rest /services/data/models splunk_server=local 
+    | table title, "acceleration.cron_schedule", "eai:digest" 
+    | rename title as key 
+    | rename "acceleration.cron_schedule" as cron] 
 | search NOT datamodel IN (Splunk_Audit Performance Updates)
-| table datamodel, "eai:acl.app", "summary.access_time", "summary.is_inprogress", "summary.size", "summary.latest_time", "summary.complete", "summary.buckets_size", "summary.buckets", cron, "summary.last_error", "summary.time_range", "summary.id", "summary.mod_time", "eai:digest", "summary.earliest_time", "summary.last_sid", "summary.access_count"
-| rename "summary.id" as summary_id, "summary.time_range" as retention, "summary.earliest_time" as earliest, "summary.latest_time" as latest, "eai:digest" as digest
-| rename "summary.*" as "*", "eai:acl.*" as "*"
-| sort datamodel
-| rename access_count as "Datamodel_Acceleration.access_count", access_time as "Datamodel_Acceleration.access_time", app as "Datamodel_Acceleration.app", buckets as "Datamodel_Acceleration.buckets", buckets_size as "Datamodel_Acceleration.buckets_size", cron as "Datamodel_Acceleration.cron", complete as "Datamodel_Acceleration.complete", datamodel as "Datamodel_Acceleration.datamodel", digest as "Datamodel_Acceleration.digest", earliest as "Datamodel_Acceleration.earliest", is_inprogress as "Datamodel_Acceleration.is_inprogress", last_error as "Datamodel_Acceleration.last_error", last_sid as "Datamodel_Acceleration.last_sid", latest as "Datamodel_Acceleration.latest", mod_time as "Datamodel_Acceleration.mod_time", retention as "Datamodel_Acceleration.retention", size as "Datamodel_Acceleration.size", summary_id as "Datamodel_Acceleration.summary_id"
-| fields + "Datamodel_Acceleration.access_count", "Datamodel_Acceleration.access_time", "Datamodel_Acceleration.app", "Datamodel_Acceleration.buckets", "Datamodel_Acceleration.buckets_size", "Datamodel_Acceleration.cron", "Datamodel_Acceleration.complete", "Datamodel_Acceleration.datamodel", "Datamodel_Acceleration.digest", "Datamodel_Acceleration.earliest", "Datamodel_Acceleration.is_inprogress", "Datamodel_Acceleration.last_error", "Datamodel_Acceleration.last_sid", "Datamodel_Acceleration.latest", "Datamodel_Acceleration.mod_time", "Datamodel_Acceleration.retention", "Datamodel_Acceleration.size", "Datamodel_Acceleration.summary_id"
-| rename "Datamodel_Acceleration.*" as "*"
-| join type=outer last_sid
-    [| rest /services/search/jobs reportsearch="summarize*" splunk_server=local
-    | rename sid as last_sid
-    | fields + last_sid, runDuration]
-| eval "size(MB)"=round((size / 1048576),1), "retention(days)"=if((retention == 0),"unlimited",round((retention / 86400),1)), "complete(%)"=round((complete * 100),1), "runDuration(s)"=round(runDuration,1)
-| sort 18 - size
+| table datamodel, "eai:acl.app", "summary.access_time", "summary.is_inprogress", "summary.size", "summary.latest_time", "summary.complete", "summary.buckets_size", "summary.buckets", cron, "summary.last_error", "summary.time_range", "summary.id", "summary.mod_time", "eai:digest", "summary.earliest_time", "summary.last_sid", "summary.access_count" 
+| rename "summary.id" as summary_id, "summary.time_range" as retention, "summary.earliest_time" as earliest, "summary.latest_time" as latest, "eai:digest" as digest 
+| rename "summary.*" as "*", "eai:acl.*" as "*" 
+| sort datamodel 
+| rename access_count as "Datamodel_Acceleration.access_count", access_time as "Datamodel_Acceleration.access_time", app as "Datamodel_Acceleration.app", buckets as "Datamodel_Acceleration.buckets", buckets_size as "Datamodel_Acceleration.buckets_size", cron as "Datamodel_Acceleration.cron", complete as "Datamodel_Acceleration.complete", datamodel as "Datamodel_Acceleration.datamodel", digest as "Datamodel_Acceleration.digest", earliest as "Datamodel_Acceleration.earliest", is_inprogress as "Datamodel_Acceleration.is_inprogress", last_error as "Datamodel_Acceleration.last_error", last_sid as "Datamodel_Acceleration.last_sid", latest as "Datamodel_Acceleration.latest", mod_time as "Datamodel_Acceleration.mod_time", retention as "Datamodel_Acceleration.retention", size as "Datamodel_Acceleration.size", summary_id as "Datamodel_Acceleration.summary_id" 
+| fields + "Datamodel_Acceleration.access_count", "Datamodel_Acceleration.access_time", "Datamodel_Acceleration.app", "Datamodel_Acceleration.buckets", "Datamodel_Acceleration.buckets_size", "Datamodel_Acceleration.cron", "Datamodel_Acceleration.complete", "Datamodel_Acceleration.datamodel", "Datamodel_Acceleration.digest", "Datamodel_Acceleration.earliest", "Datamodel_Acceleration.is_inprogress", "Datamodel_Acceleration.last_error", "Datamodel_Acceleration.last_sid", "Datamodel_Acceleration.latest", "Datamodel_Acceleration.mod_time", "Datamodel_Acceleration.retention", "Datamodel_Acceleration.size", "Datamodel_Acceleration.summary_id" 
+| rename "Datamodel_Acceleration.*" as "*" 
+| join type=outer last_sid 
+    [| rest /services/search/jobs reportsearch="summarize*" splunk_server=local 
+    | rename sid as last_sid 
+    | fields + last_sid, runDuration] 
+| eval "size(MB)"=round((size / 1048576),1), "retention(days)"=if((retention == 0),"unlimited",round((retention / 86400),1)), "complete(%)"=round((complete * 100),1), "runDuration(s)"=round(runDuration,1) 
+| sort 18 - size 
 | table datamodel, "size(MB)"
-| rename datamodel as "Data model", size(MB) as "Size in MB"</query>
+| rename datamodel as "Data Model"</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -64,14 +64,14 @@
       </chart>
     </panel>
     <panel>
-      <title>Assets and Identities Data Model event count</title>
+      <title>Assets and Identities Data Model event count - past 7 days</title>
       <table>
         <search>
           <query>| `identities`
 | stats count
 | eval "Count Type"="Identities"
 | append
-    [ search `assets` | stats count | eval "Count Type"="Assets"]
+    [ search | `assets` | stats count | eval "Count Type"="Assets"]
 | table "Count Type", count
 | rename count as Count</query>
           <earliest>-7d@h</earliest>
@@ -92,7 +92,7 @@
 | search eai:acl.app=SplunkEnterpriseSecuritySuite
 | eventstats count as total
 | search disabled=0
-| stats count as "enabled" by total
+| stats count as "enabled" by total 
 | eval percentage=(enabled*100)/total</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
@@ -158,7 +158,7 @@
   </row>
   <row>
     <panel>
-      <title>Incident Review page views in past 30 days</title>
+      <title>Incident Review page views - past 30 days</title>
       <single>
         <search>
           <query>index=_internal sourcetype=splunkd_ui_access file=incident_review
@@ -196,7 +196,6 @@
 | search isDashboard=1 isVisible=1 eai:acl.app="Splunk_Security_Essentials" title="mitre_overview"
 | rename eai:acl.app as app
 | fields title app ]
-| rename title as dashboard
 | stats count</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
@@ -207,16 +206,12 @@
       </single>
     </panel>
     <panel>
-      <title>Framework annotation coverage</title>
+      <title>Framework annotation coverage - past 30 days</title>
       <table>
         <search>
-          <query>index=notable "annotations.mitre_attack"="*"
-| stats count
-| eval "Count Type"="Mitre"
-| append
-    [ search index=risk "annotations._frameworks"="*" | stats count | eval "Count Type"="Other Frameworks"]
-| table "Count Type", count
-| rename count as Count</query>
+          <query>`notable`
+| stats count by "annotations._frameworks"
+| rename annotations._frameworks as Framework, count as Count</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -231,11 +226,11 @@
       <title>Out-of-the-box RBA rules enabled</title>
       <table>
         <search>
-          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches
+          <query>| rest splunk_server=local /servicesNS/-/-/saved/searches 
 | search action.correlationsearch.label IN ("ATT&amp;CK*" "Risk Threshold*")
-| eval disabled=case(disabled=0,"Yes",disabled=1,"No")
+| eval disabled=case(disabled=0,"Yes",disabled=1,"No") 
 | eval is_scheduled=case(is_scheduled=0,"No",is_scheduled=1,"Yes")
-| table action.correlationsearch.label disabled is_scheduled next_scheduled_time
+| table action.correlationsearch.label disabled is_scheduled next_scheduled_time 
 | rename action.correlationsearch.label AS "Incident Rule" disabled AS "Enabled" is_scheduled AS "Scheduled" next_scheduled_time AS "Next Scheduled Time"</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>
